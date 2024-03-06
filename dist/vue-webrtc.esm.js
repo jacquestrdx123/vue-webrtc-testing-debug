@@ -8407,6 +8407,7 @@ var script$1 = /*#__PURE__*/defineComponent({
               }
             });
           } catch (e) {
+              that.log(e);
             that.log('Error connecting to peer');
           }
         }
