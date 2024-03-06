@@ -112,6 +112,8 @@
                             })
                         } catch (e) {
                             that.log(e);
+                            that.log(this.signalClient);
+                            that.log(that.peerOptions);
                             that.log('Error connecting to peer');
                         }
                     }
