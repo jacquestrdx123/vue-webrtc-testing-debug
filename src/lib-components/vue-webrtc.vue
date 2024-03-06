@@ -111,6 +111,7 @@
                                 }
                             })
                         } catch (e) {
+                            that.log(e);
                             that.log('Error connecting to peer');
                         }
                     }
