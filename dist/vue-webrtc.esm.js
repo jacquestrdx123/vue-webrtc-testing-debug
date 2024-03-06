@@ -8407,8 +8407,10 @@ var script$1 = /*#__PURE__*/defineComponent({
               }
             });
           } catch (e) {
-              that.log(e);
-            that.log('Error connecting to peer');
+                that.log(e);
+                that.log(this.signalClient);
+                that.log(that.peerOptions);
+                that.log('Error connecting to peer');
           }
         }
         discoveryData.peers.forEach(peerID => connectToPeer(peerID));
