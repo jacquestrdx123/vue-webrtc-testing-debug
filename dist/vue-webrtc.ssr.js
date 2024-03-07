@@ -8675,18 +8675,21 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                                   that.onPeer(peer, v.stream);
                                 }
                               });
-                              _context.next = 14;
+                              _context.next = 17;
                               break;
                             case 11:
                               _context.prev = 11;
                               _context.t0 = _context["catch"](2);
+                              that.log(_context.t0);
+                              that.log(this.signalClient);
+                              that.log(that.peerOptions);
                               that.log('Error connecting to peer');
-                            case 14:
+                            case 17:
                             case "end":
                               return _context.stop();
                           }
                         }
-                      }, _callee, null, [[2, 11]]);
+                      }, _callee, this, [[2, 11]]);
                     }));
                     return _connectToPeer.apply(this, arguments);
                   }
@@ -8910,9 +8913,9 @@ function render$1(_ctx, _cache, $props, $setup, $data, $options) {
   } else {
     style.appendChild(document.createTextNode(css));
   }
-}var css_248z$1 = "\n.video-list[data-v-41044b41] {\r\n        background: whitesmoke;\r\n        height: auto;\r\n        display: flex;\r\n        flex-direction: row;\r\n        justify-content: center;\r\n        flex-wrap: wrap;\n}\n.video-list div[data-v-41044b41] {\r\n            padding: 0px;\n}\n.video-item[data-v-41044b41] {\r\n        background: #c5c4c4;\r\n        display: inline-block;\n}\r\n";
+}var css_248z$1 = "\n.video-list[data-v-284a4d42] {\n        background: whitesmoke;\n        height: auto;\n        display: flex;\n        flex-direction: row;\n        justify-content: center;\n        flex-wrap: wrap;\n}\n.video-list div[data-v-284a4d42] {\n            padding: 0px;\n}\n.video-item[data-v-284a4d42] {\n        background: #c5c4c4;\n        display: inline-block;\n}\n";
 styleInject(css_248z$1);script$1.render = render$1;
-script$1.__scopeId = "data-v-41044b41";var script = /*#__PURE__*/vue.defineComponent({
+script$1.__scopeId = "data-v-284a4d42";var script = /*#__PURE__*/vue.defineComponent({
   name: 'VueWebrtcSample',
   // vue component name
   data: function data() {
@@ -8976,9 +8979,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return _ctx.reset && _ctx.reset.apply(_ctx, arguments);
     })
   }, " Reset ")]);
-}var css_248z = "\n.vue-webrtc-sample[data-v-3020e3b4] {\r\n    display: block;\r\n    width: 400px;\r\n    margin: 25px auto;\r\n    border: 1px solid #ccc;\r\n    background: #eaeaea;\r\n    text-align: center;\r\n    padding: 25px;\n}\n.vue-webrtc-sample p[data-v-3020e3b4] {\r\n    margin: 0 0 1em;\n}\r\n";
+}var css_248z = "\n.vue-webrtc-sample[data-v-45861803] {\n    display: block;\n    width: 400px;\n    margin: 25px auto;\n    border: 1px solid #ccc;\n    background: #eaeaea;\n    text-align: center;\n    padding: 25px;\n}\n.vue-webrtc-sample p[data-v-45861803] {\n    margin: 0 0 1em;\n}\n";
 styleInject(css_248z);script.render = render;
-script.__scopeId = "data-v-3020e3b4";/* eslint-disable import/prefer-default-export */
+script.__scopeId = "data-v-45861803";/* eslint-disable import/prefer-default-export */
 window.io = io;var components$1=/*#__PURE__*/Object.freeze({__proto__:null,VueWebRTC:script$1,VueWebrtcSample:script});// install function executed by Vue.use()
 var install = function installVueWebrtc(app) {
   Object.entries(components$1).forEach(function (_ref) {
