@@ -8913,9 +8913,9 @@ function render$1(_ctx, _cache, $props, $setup, $data, $options) {
   } else {
     style.appendChild(document.createTextNode(css));
   }
-}var css_248z$1 = "\n.video-list[data-v-284a4d42] {\n        background: whitesmoke;\n        height: auto;\n        display: flex;\n        flex-direction: row;\n        justify-content: center;\n        flex-wrap: wrap;\n}\n.video-list div[data-v-284a4d42] {\n            padding: 0px;\n}\n.video-item[data-v-284a4d42] {\n        background: #c5c4c4;\n        display: inline-block;\n}\n";
+}var css_248z$1 = "\n.video-list[data-v-1aaafd24] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-1aaafd24] {\n      padding: 0;\n}\n.video-item[data-v-1aaafd24] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
 styleInject(css_248z$1);script$1.render = render$1;
-script$1.__scopeId = "data-v-284a4d42";var script = /*#__PURE__*/vue.defineComponent({
+script$1.__scopeId = "data-v-1aaafd24";var script = /*#__PURE__*/vue.defineComponent({
   name: 'VueWebrtcSample',
   // vue component name
   data: function data() {

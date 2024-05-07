@@ -234,20 +234,26 @@
 </script>
 <style scoped>
     .video-list {
-        background: whitesmoke;
-        height: auto;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        flex-wrap: wrap;
+      background: whitesmoke;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */
+      gap: 16px; /* Adjust spacing between items as needed */
+      justify-items: center; /* Center items horizontally within their grid cells */
+      padding: 20px; /* Adjust padding as needed */
     }
 
-        .video-list div {
-            padding: 0px;
-        }
+    .video-list div {
+      padding: 0;
+    }
 
     .video-item {
-        background: #c5c4c4;
-        display: inline-block;
+      background: #c5c4c4;
+      width: 100%; /* Make the video item fill its grid cell */
+      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid #aaa; /* Optional border for clarity */
     }
 </style>
