@@ -8251,7 +8251,7 @@ class Manager extends Emitter {
  * Managers cache.
  */
 const cache = {};
-function lookup(uri, opts) {
+function lookup$1(uri, opts) {
     if (typeof uri === "object") {
         opts = uri;
         uri = undefined;
@@ -8283,20 +8283,20 @@ function lookup(uri, opts) {
 }
 // so that "lookup" can be used both as a function (e.g. `io(...)`) and as a
 // namespace (e.g. `io.connect(...)`), for backward compatibility
-Object.assign(lookup, {
+Object.assign(lookup$1, {
     Manager,
     Socket,
-    io: lookup,
-    connect: lookup,
+    io: lookup$1,
+    connect: lookup$1,
 });
 
 var io = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Manager: Manager,
     Socket: Socket,
-    io: lookup,
-    connect: lookup,
-    'default': lookup,
+    io: lookup$1,
+    connect: lookup$1,
+    'default': lookup$1,
     protocol: protocol
 });
 
@@ -8308,6 +8308,10 @@ var script$1 = /*#__PURE__*/defineComponent({
     return {
       signalClient: null,
       videoList: [],
+      audioContext: null,
+      gainNode: null,
+      ctx: null,
+      volumeLevel: 0.5,
       canvas: null,
       socket: null
     };
@@ -8378,6 +8382,8 @@ var script$1 = /*#__PURE__*/defineComponent({
       this.log('join');
       this.socket = lookup(this.socketURL, this.ioOptions);
       this.signalClient = new SimpleSignalClient(this.socket);
+
+      // Set up media constraints
       let constraints = {
         video: that.enableVideo,
         audio: that.enableAudio
@@ -8389,13 +8395,33 @@ var script$1 = /*#__PURE__*/defineComponent({
           }
         };
       }
+
+      // Capture the media stream using getUserMedia
       const localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      // Create an audio context for manipulating the audio stream
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = this.audioContext.createMediaStreamSource(localStream);
+
+      // Create a gain node to control the volume
+      this.gainNode = this.audioContext.createGain();
+      this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
+
+      // Connect audio stream to gain node
+      source.connect(this.gainNode);
+      const destination = this.audioContext.createMediaStreamDestination();
+      this.gainNode.connect(destination);
+
+      // Replace the original audio tracks with the new ones
+      const newAudioTracks = destination.stream.getAudioTracks();
+      localStream.getAudioTracks().forEach(track => localStream.removeTrack(track));
+      newAudioTracks.forEach(track => localStream.addTrack(track));
       this.log('opened', localStream);
       this.joinedRoom(localStream, true);
       this.signalClient.once('discover', discoveryData => {
         that.log('discovered', discoveryData);
         async function connectToPeer(peerID) {
-          if (peerID == that.socket.id) return;
+          if (peerID === that.socket.id) return;
           try {
             that.log('Connecting to peer');
             const {
@@ -8407,9 +8433,6 @@ var script$1 = /*#__PURE__*/defineComponent({
               }
             });
           } catch (e) {
-            that.log(e);
-            that.log(this.signalClient);
-            that.log(that.peerOptions);
             that.log('Error connecting to peer');
           }
         }
@@ -8429,6 +8452,11 @@ var script$1 = /*#__PURE__*/defineComponent({
         });
       });
       this.signalClient.discover(that.roomId);
+    },
+    adjustVolume() {
+      if (this.gainNode) {
+        this.gainNode.gain.value = this.volumeLevel;
+      }
     },
     onPeer(peer, localStream) {
       var that = this;
@@ -8583,11 +8611,11 @@ function styleInject(css, ref) {
   }
 }
 
-var css_248z$1 = "\n.video-list[data-v-1aaafd24] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-1aaafd24] {\n      padding: 0;\n}\n.video-item[data-v-1aaafd24] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
+var css_248z$1 = "\n.video-list[data-v-1ad410e4] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-1ad410e4] {\n      padding: 0;\n}\n.video-item[data-v-1ad410e4] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
 styleInject(css_248z$1);
 
 script$1.render = render$1;
-script$1.__scopeId = "data-v-1aaafd24";
+script$1.__scopeId = "data-v-1ad410e4";
 
 var script = /*#__PURE__*/defineComponent({
   name: 'VueWebrtcSample',

@@ -8506,7 +8506,7 @@ Backoff.prototype.setJitter = function (jitter) {
  * Managers cache.
  */
 const cache = {};
-function lookup(uri, opts) {
+function lookup$1(uri, opts) {
     if (typeof uri === "object") {
         opts = uri;
         uri = undefined;
@@ -8538,12 +8538,12 @@ function lookup(uri, opts) {
 }
 // so that "lookup" can be used both as a function (e.g. `io(...)`) and as a
 // namespace (e.g. `io.connect(...)`), for backward compatibility
-Object.assign(lookup, {
+Object.assign(lookup$1, {
     Manager,
     Socket,
-    io: lookup,
-    connect: lookup,
-});var io=/*#__PURE__*/Object.freeze({__proto__:null,Manager:Manager,Socket:Socket,io:lookup,connect:lookup,'default':lookup,protocol:protocol});var SimpleSignalClient = require('simple-signal-client');
+    io: lookup$1,
+    connect: lookup$1,
+});var io=/*#__PURE__*/Object.freeze({__proto__:null,Manager:Manager,Socket:Socket,io:lookup$1,connect:lookup$1,'default':lookup$1,protocol:protocol});var SimpleSignalClient = require('simple-signal-client');
 var script$1 = /*#__PURE__*/vue.defineComponent({
   name: 'vue-webrtc',
   components: {},
@@ -8551,6 +8551,10 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
     return {
       signalClient: null,
       videoList: [],
+      audioContext: null,
+      gainNode: null,
+      ctx: null,
+      volumeLevel: 0.5,
       canvas: null,
       socket: null
     };
@@ -8619,7 +8623,7 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
     join: function join() {
       var _this = this;
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
-        var that, constraints, localStream;
+        var that, constraints, localStream, source, destination, newAudioTracks;
         return _regeneratorRuntime().wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
@@ -8628,6 +8632,8 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                 _this.log('join');
                 _this.socket = lookup(_this.socketURL, _this.ioOptions);
                 _this.signalClient = new SimpleSignalClient(_this.socket);
+
+                // Set up media constraints
                 constraints = {
                   video: that.enableVideo,
                   audio: that.enableAudio
@@ -8639,10 +8645,31 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                     }
                   };
                 }
+
+                // Capture the media stream using getUserMedia
                 _context3.next = 8;
                 return navigator.mediaDevices.getUserMedia(constraints);
               case 8:
                 localStream = _context3.sent;
+                // Create an audio context for manipulating the audio stream
+                _this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                source = _this.audioContext.createMediaStreamSource(localStream); // Create a gain node to control the volume
+                _this.gainNode = _this.audioContext.createGain();
+                _this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
+
+                // Connect audio stream to gain node
+                source.connect(_this.gainNode);
+                destination = _this.audioContext.createMediaStreamDestination();
+                _this.gainNode.connect(destination);
+
+                // Replace the original audio tracks with the new ones
+                newAudioTracks = destination.stream.getAudioTracks();
+                localStream.getAudioTracks().forEach(function (track) {
+                  return localStream.removeTrack(track);
+                });
+                newAudioTracks.forEach(function (track) {
+                  return localStream.addTrack(track);
+                });
                 _this.log('opened', localStream);
                 _this.joinedRoom(localStream, true);
                 _this.signalClient.once('discover', function (discoveryData) {
@@ -8657,7 +8684,7 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                         while (1) {
                           switch (_context.prev = _context.next) {
                             case 0:
-                              if (!(peerID == that.socket.id)) {
+                              if (!(peerID === that.socket.id)) {
                                 _context.next = 2;
                                 break;
                               }
@@ -8675,21 +8702,18 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                                   that.onPeer(peer, v.stream);
                                 }
                               });
-                              _context.next = 17;
+                              _context.next = 14;
                               break;
                             case 11:
                               _context.prev = 11;
                               _context.t0 = _context["catch"](2);
-                              that.log(_context.t0);
-                              that.log(this.signalClient);
-                              that.log(that.peerOptions);
                               that.log('Error connecting to peer');
-                            case 17:
+                            case 14:
                             case "end":
                               return _context.stop();
                           }
                         }
-                      }, _callee, this, [[2, 11]]);
+                      }, _callee, null, [[2, 11]]);
                     }));
                     return _connectToPeer.apply(this, arguments);
                   }
@@ -8729,13 +8753,18 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                   };
                 }());
                 _this.signalClient.discover(that.roomId);
-              case 14:
+              case 24:
               case "end":
                 return _context3.stop();
             }
           }
         }, _callee3);
       }))();
+    },
+    adjustVolume: function adjustVolume() {
+      if (this.gainNode) {
+        this.gainNode.gain.value = this.volumeLevel;
+      }
     },
     onPeer: function onPeer(peer, localStream) {
       var that = this;
@@ -8913,9 +8942,9 @@ function render$1(_ctx, _cache, $props, $setup, $data, $options) {
   } else {
     style.appendChild(document.createTextNode(css));
   }
-}var css_248z$1 = "\n.video-list[data-v-1aaafd24] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-1aaafd24] {\n      padding: 0;\n}\n.video-item[data-v-1aaafd24] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
+}var css_248z$1 = "\n.video-list[data-v-1ad410e4] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-1ad410e4] {\n      padding: 0;\n}\n.video-item[data-v-1ad410e4] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
 styleInject(css_248z$1);script$1.render = render$1;
-script$1.__scopeId = "data-v-1aaafd24";var script = /*#__PURE__*/vue.defineComponent({
+script$1.__scopeId = "data-v-1ad410e4";var script = /*#__PURE__*/vue.defineComponent({
   name: 'VueWebrtcSample',
   // vue component name
   data: function data() {
