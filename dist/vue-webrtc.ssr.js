@@ -8648,23 +8648,27 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                 localStream = _context3.sent;
                 // Create an audio context for manipulating the audio stream
                 _this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                source = _this.audioContext.createMediaStreamSource(localStream); // Create a gain node to control the volume
-                _this.gainNode = _this.audioContext.createGain();
-                _this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
+                try {
+                  source = _this.audioContext.createMediaStreamSource(localStream); // Create a gain node to control the volume
+                  _this.gainNode = _this.audioContext.createGain();
+                  _this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
 
-                // Connect audio stream to gain node
-                source.connect(_this.gainNode);
-                destination = _this.audioContext.createMediaStreamDestination();
-                _this.gainNode.connect(destination);
+                  // Connect audio stream to gain node
+                  source.connect(_this.gainNode);
+                  destination = _this.audioContext.createMediaStreamDestination();
+                  _this.gainNode.connect(destination);
 
-                // Replace the original audio tracks with the new ones
-                newAudioTracks = destination.stream.getAudioTracks();
-                localStream.getAudioTracks().forEach(function (track) {
-                  return localStream.removeTrack(track);
-                });
-                newAudioTracks.forEach(function (track) {
-                  return localStream.addTrack(track);
-                });
+                  // Replace the original audio tracks with the new ones
+                  newAudioTracks = destination.stream.getAudioTracks();
+                  localStream.getAudioTracks().forEach(function (track) {
+                    return localStream.removeTrack(track);
+                  });
+                  newAudioTracks.forEach(function (track) {
+                    return localStream.addTrack(track);
+                  });
+                } catch (e) {
+                  that.log(e);
+                }
                 _this.log('opened', localStream);
                 _this.joinedRoom(localStream, true);
                 _this.signalClient.once('discover', function (discoveryData) {
@@ -8751,7 +8755,7 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                   };
                 }());
                 _this.signalClient.discover(that.roomId);
-              case 24:
+              case 16:
               case "end":
                 return _context3.stop();
             }
@@ -8935,9 +8939,9 @@ function render$1(_ctx, _cache, $props, $setup, $data, $options) {
   } else {
     style.appendChild(document.createTextNode(css));
   }
-}var css_248z$1 = "\n.video-list[data-v-4e0f79c6] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-4e0f79c6] {\n      padding: 0;\n}\n.video-item[data-v-4e0f79c6] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
+}var css_248z$1 = "\n.video-list[data-v-6daa3ea5] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-6daa3ea5] {\n      padding: 0;\n}\n.video-item[data-v-6daa3ea5] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
 styleInject(css_248z$1);script$1.render = render$1;
-script$1.__scopeId = "data-v-4e0f79c6";var script = /*#__PURE__*/vue.defineComponent({
+script$1.__scopeId = "data-v-6daa3ea5";var script = /*#__PURE__*/vue.defineComponent({
   name: 'VueWebrtcSample',
   // vue component name
   data: function data() {

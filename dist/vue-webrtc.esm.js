@@ -8396,21 +8396,25 @@ var script$1 = /*#__PURE__*/defineComponent({
 
       // Create an audio context for manipulating the audio stream
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = this.audioContext.createMediaStreamSource(localStream);
+      try {
+        const source = this.audioContext.createMediaStreamSource(localStream);
 
-      // Create a gain node to control the volume
-      this.gainNode = this.audioContext.createGain();
-      this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
+        // Create a gain node to control the volume
+        this.gainNode = this.audioContext.createGain();
+        this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
 
-      // Connect audio stream to gain node
-      source.connect(this.gainNode);
-      const destination = this.audioContext.createMediaStreamDestination();
-      this.gainNode.connect(destination);
+        // Connect audio stream to gain node
+        source.connect(this.gainNode);
+        const destination = this.audioContext.createMediaStreamDestination();
+        this.gainNode.connect(destination);
 
-      // Replace the original audio tracks with the new ones
-      const newAudioTracks = destination.stream.getAudioTracks();
-      localStream.getAudioTracks().forEach(track => localStream.removeTrack(track));
-      newAudioTracks.forEach(track => localStream.addTrack(track));
+        // Replace the original audio tracks with the new ones
+        const newAudioTracks = destination.stream.getAudioTracks();
+        localStream.getAudioTracks().forEach(track => localStream.removeTrack(track));
+        newAudioTracks.forEach(track => localStream.addTrack(track));
+      } catch (e) {
+        that.log(e);
+      }
       this.log('opened', localStream);
       this.joinedRoom(localStream, true);
       this.signalClient.once('discover', discoveryData => {
@@ -8604,11 +8608,11 @@ function styleInject(css, ref) {
   }
 }
 
-var css_248z$1 = "\n.video-list[data-v-4e0f79c6] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-4e0f79c6] {\n      padding: 0;\n}\n.video-item[data-v-4e0f79c6] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
+var css_248z$1 = "\n.video-list[data-v-6daa3ea5] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-6daa3ea5] {\n      padding: 0;\n}\n.video-item[data-v-6daa3ea5] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
 styleInject(css_248z$1);
 
 script$1.render = render$1;
-script$1.__scopeId = "data-v-4e0f79c6";
+script$1.__scopeId = "data-v-6daa3ea5";
 
 var script = /*#__PURE__*/defineComponent({
   name: 'VueWebrtcSample',

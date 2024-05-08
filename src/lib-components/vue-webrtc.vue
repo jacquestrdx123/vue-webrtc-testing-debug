@@ -102,21 +102,27 @@
 
               // Create an audio context for manipulating the audio stream
               this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-              const source = this.audioContext.createMediaStreamSource(localStream);
 
-              // Create a gain node to control the volume
-              this.gainNode = this.audioContext.createGain();
-              this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
+              try{
+                const source = this.audioContext.createMediaStreamSource(localStream);
 
-              // Connect audio stream to gain node
-              source.connect(this.gainNode);
-              const destination = this.audioContext.createMediaStreamDestination();
-              this.gainNode.connect(destination);
+                // Create a gain node to control the volume
+                this.gainNode = this.audioContext.createGain();
+                this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
 
-              // Replace the original audio tracks with the new ones
-              const newAudioTracks = destination.stream.getAudioTracks();
-              localStream.getAudioTracks().forEach((track) => localStream.removeTrack(track));
-              newAudioTracks.forEach((track) => localStream.addTrack(track));
+                // Connect audio stream to gain node
+                source.connect(this.gainNode);
+                const destination = this.audioContext.createMediaStreamDestination();
+                this.gainNode.connect(destination);
+
+                // Replace the original audio tracks with the new ones
+                const newAudioTracks = destination.stream.getAudioTracks();
+                localStream.getAudioTracks().forEach((track) => localStream.removeTrack(track));
+                newAudioTracks.forEach((track) => localStream.addTrack(track));
+              }catch (e){
+                that.log(e);
+              }
+
 
                 this.log('opened', localStream);
                 this.joinedRoom(localStream, true);
