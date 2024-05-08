@@ -21,11 +21,10 @@
         data() {
             return {
                 signalClient: null,
-                videoList: [],
                 audioContext: null,
                 gainNode: null,
                 ctx: null,
-                volumeLevel : 0.5,
+                videoList: [],
                 canvas: null,
                 socket: null
             };
@@ -88,26 +87,18 @@
         },
         methods: {
             async join() {
-              var that = this;
-              this.log('join');
-              this.socket = lookup(this.socketURL, this.ioOptions);
-              this.signalClient = new SimpleSignalClient(this.socket);
-
-              // Set up media constraints
-              let constraints = {
-                video: that.enableVideo,
-                audio: that.enableAudio
-              };
-              if (that.deviceId && that.enableVideo) {
-                constraints.video = {
-                  deviceId: {
-                    exact: that.deviceId
-                  }
+                var that = this;
+                this.log('join');
+                this.socket = io(this.socketURL, this.ioOptions);
+                this.signalClient = new SimpleSignalClient(this.socket);
+                let constraints = {
+                    video: that.enableVideo,
+                    audio: that.enableAudio
                 };
-              }
-
-              // Capture the media stream using getUserMedia
-              const localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                if (that.deviceId && that.enableVideo) {
+                    constraints.video = { deviceId: { exact: that.deviceId } };
+                }
+                const localStream = await navigator.mediaDevices.getUserMedia(constraints);
 
               // Create an audio context for manipulating the audio stream
               this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -127,46 +118,41 @@
               localStream.getAudioTracks().forEach((track) => localStream.removeTrack(track));
               newAudioTracks.forEach((track) => localStream.addTrack(track));
 
-              this.log('opened', localStream);
-              this.joinedRoom(localStream, true);
-
-              this.signalClient.once('discover', (discoveryData) => {
-                that.log('discovered', discoveryData);
-                async function connectToPeer(peerID) {
-                  if (peerID === that.socket.id) return;
-                  try {
-                    that.log('Connecting to peer');
-                    const { peer } = await that.signalClient.connect(peerID, that.roomId, that.peerOptions);
-                    that.videoList.forEach((v) => {
-                      if (v.isLocal) {
-                        that.onPeer(peer, v.stream);
-                      }
-                    });
-                  } catch (e) {
-                    that.log('Error connecting to peer');
-                  }
-                }
-                discoveryData.peers.forEach((peerID) => connectToPeer(peerID));
-                that.$emit('opened-room', that.roomId);
-              });
-
-              this.signalClient.on('request', async (request) => {
-                that.log('requested', request);
-                const { peer } = await request.accept({}, that.peerOptions);
-                that.log('accepted', peer);
-                that.videoList.forEach((v) => {
-                  if (v.isLocal) {
-                    that.onPeer(peer, v.stream);
-                  }
+                this.log('opened', localStream);
+                this.joinedRoom(localStream, true);
+                this.signalClient.once('discover', (discoveryData) => {
+                    that.log('discovered', discoveryData)
+                    async function connectToPeer(peerID) {
+                        if (peerID == that.socket.id) return;
+                        try {
+                            that.log('Connecting to peer');
+                            const { peer } = await that.signalClient.connect(peerID, that.roomId, that.peerOptions);
+                            that.videoList.forEach(v => {
+                                if (v.isLocal) {
+                                    that.onPeer(peer, v.stream);
+                                }
+                            })
+                        } catch (e) {
+                            that.log(e);
+                            that.log(this.signalClient);
+                            that.log(that.peerOptions);
+                            that.log('Error connecting to peer');
+                        }
+                    }
+                    discoveryData.peers.forEach((peerID) => connectToPeer(peerID));
+                    that.$emit('opened-room', that.roomId);
                 });
-              });
-
-              this.signalClient.discover(that.roomId);
-            },
-            adjustVolume() {
-              if (this.gainNode) {
-                this.gainNode.gain.value = this.volumeLevel;
-              }
+                this.signalClient.on('request', async (request) => {
+                    that.log('requested', request)
+                    const { peer } = await request.accept({}, that.peerOptions)
+                    that.log('accepted', peer);
+                    that.videoList.forEach(v => {
+                        if (v.isLocal) {
+                            that.onPeer(peer, v.stream);
+                        }
+                    })
+                })
+                this.signalClient.discover(that.roomId);
             },
             onPeer(peer, localStream) {
                 var that = this;
