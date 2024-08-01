@@ -8303,7 +8303,6 @@ var io = /*#__PURE__*/Object.freeze({
 const SimpleSignalClient = require('simple-signal-client');
 var script$1 = /*#__PURE__*/defineComponent({
   name: 'vue-webrtc',
-  components: {},
   data() {
     return {
       signalClient: null,
@@ -8312,7 +8311,9 @@ var script$1 = /*#__PURE__*/defineComponent({
       ctx: null,
       videoList: [],
       canvas: null,
-      socket: null
+      socket: null,
+      localVideoStream: null,
+      localAudioStream: null
     };
   },
   props: {
@@ -8323,10 +8324,7 @@ var script$1 = /*#__PURE__*/defineComponent({
     socketURL: {
       type: String,
       default: 'https://weston-vue-webrtc-lobby.azurewebsites.net'
-      //default: 'https://localhost:3000'
-      //default: 'https://192.168.1.201:3000'
     },
-
     cameraHeight: {
       type: [Number, String],
       default: 160
@@ -8353,14 +8351,12 @@ var script$1 = /*#__PURE__*/defineComponent({
     },
     peerOptions: {
       type: Object,
-      // NOTE: use these options: https://github.com/feross/simple-peer
       default() {
         return {};
       }
     },
     ioOptions: {
       type: Object,
-      // NOTE: use these options: https://socket.io/docs/v4/client-options/
       default() {
         return {
           rejectUnauthorized: false,
@@ -8373,132 +8369,105 @@ var script$1 = /*#__PURE__*/defineComponent({
       default: null
     }
   },
-  watch: {},
-  mounted() {},
+  mounted() {
+    this.join();
+  },
   methods: {
     async join() {
-      var that = this;
-      this.log('join');
       this.socket = lookup(this.socketURL, this.ioOptions);
       this.signalClient = new SimpleSignalClient(this.socket);
-      let constraints = {
-        video: that.enableVideo,
-        audio: that.enableAudio
+      const videoConstraints = {
+        video: this.enableVideo,
+        audio: false
       };
-      if (that.deviceId && that.enableVideo) {
-        constraints.video = {
+      if (this.deviceId && this.enableVideo) {
+        videoConstraints.video = {
           deviceId: {
-            exact: that.deviceId
+            exact: this.deviceId
           }
         };
       }
-      const localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const audioConstraints = {
+        video: false,
+        audio: this.enableAudio
+      };
+      this.localVideoStream = await navigator.mediaDevices.getUserMedia(videoConstraints);
+      this.localAudioStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
 
-      // Create an audio context for manipulating the audio stream
+      // Initialize the audio context and manipulate the audio stream
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
       try {
-        const source = this.audioContext.createMediaStreamSource(localStream);
-
-        // Create a gain node to control the volume
+        const source = this.audioContext.createMediaStreamSource(this.localAudioStream);
         this.gainNode = this.audioContext.createGain();
-        this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
-
-        // Connect audio stream to gain node
+        this.gainNode.gain.value = 0.5;
         source.connect(this.gainNode);
         const destination = this.audioContext.createMediaStreamDestination();
         this.gainNode.connect(destination);
-
-        // Replace the original audio tracks with the new ones
         const newAudioTracks = destination.stream.getAudioTracks();
-        localStream.getAudioTracks().forEach(track => localStream.removeTrack(track));
-        newAudioTracks.forEach(track => localStream.addTrack(track));
+        this.localAudioStream.getAudioTracks().forEach(track => this.localAudioStream.removeTrack(track));
+        newAudioTracks.forEach(track => this.localAudioStream.addTrack(track));
       } catch (e) {
-        that.log(e);
+        this.log(e);
       }
-      this.log('opened', localStream);
-      this.joinedRoom(localStream, true);
+      this.joinedRoom(this.localVideoStream, true, 'video');
+      this.joinedRoom(this.localAudioStream, true, 'audio');
       this.signalClient.once('discover', discoveryData => {
-        that.log('discovered', discoveryData);
-        async function connectToPeer(peerID) {
-          if (peerID == that.socket.id) return;
-          try {
-            that.log('Connecting to peer');
-            const {
-              peer
-            } = await that.signalClient.connect(peerID, that.roomId, that.peerOptions);
-            that.videoList.forEach(v => {
-              if (v.isLocal) {
-                that.onPeer(peer, v.stream);
-              }
-            });
-          } catch (e) {
-            that.log(e);
-            that.log(this.signalClient);
-            that.log(that.peerOptions);
-            that.log('Error connecting to peer');
-          }
-        }
-        discoveryData.peers.forEach(peerID => connectToPeer(peerID));
-        that.$emit('opened-room', that.roomId);
+        discoveryData.peers.forEach(peerID => this.connectToPeer(peerID));
+        this.$emit('opened-room', this.roomId);
       });
       this.signalClient.on('request', async request => {
-        that.log('requested', request);
         const {
           peer
-        } = await request.accept({}, that.peerOptions);
-        that.log('accepted', peer);
-        that.videoList.forEach(v => {
-          if (v.isLocal) {
-            that.onPeer(peer, v.stream);
-          }
-        });
+        } = await request.accept({}, this.peerOptions);
+        this.onPeer(peer);
       });
-      this.signalClient.discover(that.roomId);
+      this.signalClient.discover(this.roomId);
     },
-    onPeer(peer, localStream) {
-      var that = this;
-      that.log('onPeer');
-      peer.addStream(localStream);
+    async connectToPeer(peerID) {
+      if (peerID === this.socket.id) return;
+      try {
+        const {
+          peer
+        } = await this.signalClient.connect(peerID, this.roomId, this.peerOptions);
+        this.onPeer(peer);
+      } catch (e) {
+        this.log('Error connecting to peer', e);
+      }
+    },
+    onPeer(peer) {
+      peer.addStream(this.localVideoStream);
+      peer.addStream(this.localAudioStream);
       peer.on('stream', remoteStream => {
-        that.joinedRoom(remoteStream, false);
+        const streamType = remoteStream.getVideoTracks().length > 0 ? 'video' : 'audio';
+        this.joinedRoom(remoteStream, false, streamType);
         peer.on('close', () => {
-          var newList = [];
-          that.videoList.forEach(function (item) {
-            if (item.id !== remoteStream.id) {
-              newList.push(item);
-            }
-          });
-          that.videoList = newList;
-          that.$emit('left-room', remoteStream.id);
+          this.videoList = this.videoList.filter(item => item.id !== remoteStream.id);
+          this.$emit('left-room', remoteStream.id);
         });
         peer.on('error', err => {
-          that.log('peer error ', err);
+          this.log('peer error', err);
         });
       });
     },
-    joinedRoom(stream, isLocal) {
-      var that = this;
-      let found = that.videoList.find(video => {
-        return video.id === stream.id;
-      });
-      if (found === undefined) {
-        let video = {
+    joinedRoom(stream, isLocal, streamType) {
+      if (!this.videoList.find(video => video.id === stream.id)) {
+        this.videoList.push({
           id: stream.id,
           muted: isLocal,
-          stream: stream,
-          isLocal: isLocal
-        };
-        that.videoList.push(video);
+          stream,
+          isLocal,
+          streamType
+        });
       }
-      setTimeout(function () {
-        for (var i = 0, len = that.$refs.videos.length; i < len; i++) {
-          if (that.$refs.videos[i].id === stream.id) {
-            that.$refs.videos[i].srcObject = stream;
+      setTimeout(() => {
+        for (let i = 0, len = this.$refs.videos.length; i < len; i++) {
+          if (this.$refs.videos[i].id === stream.id) {
+            this.$refs.videos[i].srcObject = stream;
             break;
           }
         }
       }, 500);
-      that.$emit('joined-room', stream.id);
+      this.$emit('joined-room', stream.id);
     },
     leave() {
       this.videoList.forEach(v => v.stream.getTracks().forEach(t => t.stop()));
@@ -8521,29 +8490,24 @@ var script$1 = /*#__PURE__*/defineComponent({
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
       }
-      const {
-        ctx,
-        canvas
-      } = this;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      return canvas;
+      this.ctx.drawImage(video, 0, 0, this.canvas.width, this.canvas.height);
+      return this.canvas;
     },
     async shareScreen() {
-      var that = this;
-      if (navigator.mediaDevices == undefined) {
-        that.log('Error: https is required to load cameras');
+      if (!navigator.mediaDevices) {
+        this.log('Error: https is required to load cameras');
         return;
       }
       try {
-        var screenStream = await navigator.mediaDevices.getDisplayMedia({
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
           audio: false
         });
-        this.joinedRoom(screenStream, true);
-        that.$emit('share-started', screenStream.id);
-        that.signalClient.peers().forEach(p => that.onPeer(p, screenStream));
+        this.joinedRoom(screenStream, true, 'video');
+        this.signalClient.peers().forEach(p => this.onPeer(p, screenStream));
+        this.$emit('share-started', screenStream.id);
       } catch (e) {
-        that.log('Media error: ' + JSON.stringify(e));
+        this.log('Media error', e);
       }
     },
     log(message, data) {
@@ -8608,11 +8572,11 @@ function styleInject(css, ref) {
   }
 }
 
-var css_248z$1 = "\n.video-list[data-v-90d6cef0] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-90d6cef0] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-90d6cef0] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
+var css_248z$1 = "\n.video-list[data-v-6a692c70] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-6a692c70] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-6a692c70] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
 styleInject(css_248z$1);
 
 script$1.render = render$1;
-script$1.__scopeId = "data-v-90d6cef0";
+script$1.__scopeId = "data-v-6a692c70";
 
 var script = /*#__PURE__*/defineComponent({
   name: 'VueWebrtcSample',
