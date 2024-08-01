@@ -8546,6 +8546,7 @@ Object.assign(lookup, {
 });var io=/*#__PURE__*/Object.freeze({__proto__:null,Manager:Manager,Socket:Socket,io:lookup,connect:lookup,'default':lookup,protocol:protocol});var SimpleSignalClient = require('simple-signal-client');
 var script$1 = /*#__PURE__*/vue.defineComponent({
   name: 'vue-webrtc',
+  components: {},
   data: function data() {
     return {
       signalClient: null,
@@ -8554,9 +8555,7 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
       ctx: null,
       videoList: [],
       canvas: null,
-      socket: null,
-      localVideoStream: null,
-      localAudioStream: null
+      socket: null
     };
   },
   props: {
@@ -8567,7 +8566,10 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
     socketURL: {
       type: String,
       default: 'https://weston-vue-webrtc-lobby.azurewebsites.net'
+      //default: 'https://localhost:3000'
+      //default: 'https://192.168.1.201:3000'
     },
+
     cameraHeight: {
       type: [Number, String],
       default: 160
@@ -8594,12 +8596,14 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
     },
     peerOptions: {
       type: Object,
+      // NOTE: use these options: https://github.com/feross/simple-peer
       default: function _default() {
         return {};
       }
     },
     ioOptions: {
       type: Object,
+      // NOTE: use these options: https://socket.io/docs/v4/client-options/
       default: function _default() {
         return {
           rejectUnauthorized: false,
@@ -8612,178 +8616,197 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
       default: null
     }
   },
-  mounted: function mounted() {
-    this.join();
-  },
+  watch: {},
+  mounted: function mounted() {},
   methods: {
     join: function join() {
       var _this = this;
-      return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
-        var videoConstraints, audioConstraints, source, destination, newAudioTracks;
-        return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                _this.socket = lookup(_this.socketURL, _this.ioOptions);
-                _this.signalClient = new SimpleSignalClient(_this.socket);
-                videoConstraints = {
-                  video: _this.enableVideo,
-                  audio: false
-                };
-                if (_this.deviceId && _this.enableVideo) {
-                  videoConstraints.video = {
-                    deviceId: {
-                      exact: _this.deviceId
-                    }
-                  };
-                }
-                audioConstraints = {
-                  video: false,
-                  audio: _this.enableAudio
-                };
-                _context2.next = 7;
-                return navigator.mediaDevices.getUserMedia(videoConstraints);
-              case 7:
-                _this.localVideoStream = _context2.sent;
-                _context2.next = 10;
-                return navigator.mediaDevices.getUserMedia(audioConstraints);
-              case 10:
-                _this.localAudioStream = _context2.sent;
-                // Initialize the audio context and manipulate the audio stream
-                _this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                try {
-                  source = _this.audioContext.createMediaStreamSource(_this.localAudioStream);
-                  _this.gainNode = _this.audioContext.createGain();
-                  _this.gainNode.gain.value = 0.5;
-                  source.connect(_this.gainNode);
-                  destination = _this.audioContext.createMediaStreamDestination();
-                  _this.gainNode.connect(destination);
-                  newAudioTracks = destination.stream.getAudioTracks();
-                  _this.localAudioStream.getAudioTracks().forEach(function (track) {
-                    return _this.localAudioStream.removeTrack(track);
-                  });
-                  newAudioTracks.forEach(function (track) {
-                    return _this.localAudioStream.addTrack(track);
-                  });
-                } catch (e) {
-                  _this.log(e);
-                }
-                _this.joinedRoom(_this.localVideoStream, true, 'video');
-                _this.joinedRoom(_this.localAudioStream, true, 'audio');
-                _this.signalClient.once('discover', function (discoveryData) {
-                  discoveryData.peers.forEach(function (peerID) {
-                    return _this.connectToPeer(peerID);
-                  });
-                  _this.$emit('opened-room', _this.roomId);
-                });
-                _this.signalClient.on('request', /*#__PURE__*/function () {
-                  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(request) {
-                    var _yield$request$accept, peer;
-                    return _regeneratorRuntime().wrap(function _callee$(_context) {
-                      while (1) {
-                        switch (_context.prev = _context.next) {
-                          case 0:
-                            _context.next = 2;
-                            return request.accept({}, _this.peerOptions);
-                          case 2:
-                            _yield$request$accept = _context.sent;
-                            peer = _yield$request$accept.peer;
-                            _this.onPeer(peer);
-                          case 5:
-                          case "end":
-                            return _context.stop();
-                        }
-                      }
-                    }, _callee);
-                  }));
-                  return function (_x) {
-                    return _ref.apply(this, arguments);
-                  };
-                }());
-                _this.signalClient.discover(_this.roomId);
-              case 18:
-              case "end":
-                return _context2.stop();
-            }
-          }
-        }, _callee2);
-      }))();
-    },
-    connectToPeer: function connectToPeer(peerID) {
-      var _this2 = this;
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
-        var _yield$_this2$signalC, peer;
+        var that, constraints, localStream, source, destination, newAudioTracks;
         return _regeneratorRuntime().wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                if (!(peerID === _this2.socket.id)) {
-                  _context3.next = 2;
-                  break;
+                that = _this;
+                _this.log('join');
+                _this.socket = lookup(_this.socketURL, _this.ioOptions);
+                _this.signalClient = new SimpleSignalClient(_this.socket);
+                constraints = {
+                  video: that.enableVideo,
+                  audio: that.enableAudio
+                };
+                if (that.deviceId && that.enableVideo) {
+                  constraints.video = {
+                    deviceId: {
+                      exact: that.deviceId
+                    }
+                  };
                 }
-                return _context3.abrupt("return");
-              case 2:
-                _context3.prev = 2;
-                _context3.next = 5;
-                return _this2.signalClient.connect(peerID, _this2.roomId, _this2.peerOptions);
-              case 5:
-                _yield$_this2$signalC = _context3.sent;
-                peer = _yield$_this2$signalC.peer;
-                _this2.onPeer(peer);
-                _context3.next = 13;
-                break;
-              case 10:
-                _context3.prev = 10;
-                _context3.t0 = _context3["catch"](2);
-                _this2.log('Error connecting to peer', _context3.t0);
-              case 13:
+                _context3.next = 8;
+                return navigator.mediaDevices.getUserMedia(constraints);
+              case 8:
+                localStream = _context3.sent;
+                // Create an audio context for manipulating the audio stream
+                _this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                try {
+                  source = _this.audioContext.createMediaStreamSource(localStream); // Create a gain node to control the volume
+                  _this.gainNode = _this.audioContext.createGain();
+                  _this.gainNode.gain.value = 0.5; // Set initial volume (0.0 - 1.0)
+
+                  // Connect audio stream to gain node
+                  source.connect(_this.gainNode);
+                  destination = _this.audioContext.createMediaStreamDestination();
+                  _this.gainNode.connect(destination);
+
+                  // Replace the original audio tracks with the new ones
+                  newAudioTracks = destination.stream.getAudioTracks();
+                  localStream.getAudioTracks().forEach(function (track) {
+                    return localStream.removeTrack(track);
+                  });
+                  newAudioTracks.forEach(function (track) {
+                    return localStream.addTrack(track);
+                  });
+                } catch (e) {
+                  that.log(e);
+                }
+                _this.log('opened', localStream);
+                _this.joinedRoom(localStream, true);
+                _this.signalClient.once('discover', function (discoveryData) {
+                  that.log('discovered', discoveryData);
+                  function connectToPeer(_x) {
+                    return _connectToPeer.apply(this, arguments);
+                  }
+                  function _connectToPeer() {
+                    _connectToPeer = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(peerID) {
+                      var _yield$that$signalCli, peer;
+                      return _regeneratorRuntime().wrap(function _callee$(_context) {
+                        while (1) {
+                          switch (_context.prev = _context.next) {
+                            case 0:
+                              if (!(peerID == that.socket.id)) {
+                                _context.next = 2;
+                                break;
+                              }
+                              return _context.abrupt("return");
+                            case 2:
+                              _context.prev = 2;
+                              that.log('Connecting to peer');
+                              _context.next = 6;
+                              return that.signalClient.connect(peerID, that.roomId, that.peerOptions);
+                            case 6:
+                              _yield$that$signalCli = _context.sent;
+                              peer = _yield$that$signalCli.peer;
+                              that.videoList.forEach(function (v) {
+                                if (v.isLocal) {
+                                  that.onPeer(peer, v.stream);
+                                }
+                              });
+                              _context.next = 17;
+                              break;
+                            case 11:
+                              _context.prev = 11;
+                              _context.t0 = _context["catch"](2);
+                              that.log(_context.t0);
+                              that.log(this.signalClient);
+                              that.log(that.peerOptions);
+                              that.log('Error connecting to peer');
+                            case 17:
+                            case "end":
+                              return _context.stop();
+                          }
+                        }
+                      }, _callee, this, [[2, 11]]);
+                    }));
+                    return _connectToPeer.apply(this, arguments);
+                  }
+                  discoveryData.peers.forEach(function (peerID) {
+                    return connectToPeer(peerID);
+                  });
+                  that.$emit('opened-room', that.roomId);
+                });
+                _this.signalClient.on('request', /*#__PURE__*/function () {
+                  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(request) {
+                    var _yield$request$accept, peer;
+                    return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+                      while (1) {
+                        switch (_context2.prev = _context2.next) {
+                          case 0:
+                            that.log('requested', request);
+                            _context2.next = 3;
+                            return request.accept({}, that.peerOptions);
+                          case 3:
+                            _yield$request$accept = _context2.sent;
+                            peer = _yield$request$accept.peer;
+                            that.log('accepted', peer);
+                            that.videoList.forEach(function (v) {
+                              if (v.isLocal) {
+                                that.onPeer(peer, v.stream);
+                              }
+                            });
+                          case 7:
+                          case "end":
+                            return _context2.stop();
+                        }
+                      }
+                    }, _callee2);
+                  }));
+                  return function (_x2) {
+                    return _ref.apply(this, arguments);
+                  };
+                }());
+                _this.signalClient.discover(that.roomId);
+              case 16:
               case "end":
                 return _context3.stop();
             }
           }
-        }, _callee3, null, [[2, 10]]);
+        }, _callee3);
       }))();
     },
-    onPeer: function onPeer(peer) {
-      var _this3 = this;
-      peer.addStream(this.localVideoStream);
-      peer.addStream(this.localAudioStream);
+    onPeer: function onPeer(peer, localStream) {
+      var that = this;
+      that.log('onPeer');
+      peer.addStream(localStream);
       peer.on('stream', function (remoteStream) {
-        var streamType = remoteStream.getVideoTracks().length > 0 ? 'video' : 'audio';
-        _this3.joinedRoom(remoteStream, false, streamType);
+        that.joinedRoom(remoteStream, false);
         peer.on('close', function () {
-          _this3.videoList = _this3.videoList.filter(function (item) {
-            return item.id !== remoteStream.id;
+          var newList = [];
+          that.videoList.forEach(function (item) {
+            if (item.id !== remoteStream.id) {
+              newList.push(item);
+            }
           });
-          _this3.$emit('left-room', remoteStream.id);
+          that.videoList = newList;
+          that.$emit('left-room', remoteStream.id);
         });
         peer.on('error', function (err) {
-          _this3.log('peer error', err);
+          that.log('peer error ', err);
         });
       });
     },
-    joinedRoom: function joinedRoom(stream, isLocal, streamType) {
-      var _this4 = this;
-      if (!this.videoList.find(function (video) {
+    joinedRoom: function joinedRoom(stream, isLocal) {
+      var that = this;
+      var found = that.videoList.find(function (video) {
         return video.id === stream.id;
-      })) {
-        this.videoList.push({
+      });
+      if (found === undefined) {
+        var video = {
           id: stream.id,
           muted: isLocal,
           stream: stream,
-          isLocal: isLocal,
-          streamType: streamType
-        });
+          isLocal: isLocal
+        };
+        that.videoList.push(video);
       }
       setTimeout(function () {
-        for (var i = 0, len = _this4.$refs.videos.length; i < len; i++) {
-          if (_this4.$refs.videos[i].id === stream.id) {
-            _this4.$refs.videos[i].srcObject = stream;
+        for (var i = 0, len = that.$refs.videos.length; i < len; i++) {
+          if (that.$refs.videos[i].id === stream.id) {
+            that.$refs.videos[i].srcObject = stream;
             break;
           }
         }
       }, 500);
-      this.$emit('joined-room', stream.id);
+      that.$emit('joined-room', stream.id);
     },
     leave: function leave() {
       this.videoList.forEach(function (v) {
@@ -8806,55 +8829,58 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
     getCanvas: function getCanvas() {
       var video = this.$refs.videos[0];
       if (video !== null && !this.ctx) {
-        var canvas = document.createElement('canvas');
-        canvas.height = video.clientHeight;
-        canvas.width = video.clientWidth;
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
+        var _canvas = document.createElement('canvas');
+        _canvas.height = video.clientHeight;
+        _canvas.width = video.clientWidth;
+        this.canvas = _canvas;
+        this.ctx = _canvas.getContext('2d');
       }
-      this.ctx.drawImage(video, 0, 0, this.canvas.width, this.canvas.height);
-      return this.canvas;
+      var ctx = this.ctx,
+        canvas = this.canvas;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas;
     },
     shareScreen: function shareScreen() {
-      var _this5 = this;
+      var _this2 = this;
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
-        var screenStream;
+        var that, screenStream;
         return _regeneratorRuntime().wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                if (navigator.mediaDevices) {
-                  _context4.next = 3;
+                that = _this2;
+                if (!(navigator.mediaDevices == undefined)) {
+                  _context4.next = 4;
                   break;
                 }
-                _this5.log('Error: https is required to load cameras');
+                that.log('Error: https is required to load cameras');
                 return _context4.abrupt("return");
-              case 3:
-                _context4.prev = 3;
-                _context4.next = 6;
+              case 4:
+                _context4.prev = 4;
+                _context4.next = 7;
                 return navigator.mediaDevices.getDisplayMedia({
                   video: true,
                   audio: false
                 });
-              case 6:
+              case 7:
                 screenStream = _context4.sent;
-                _this5.joinedRoom(screenStream, true, 'video');
-                _this5.signalClient.peers().forEach(function (p) {
-                  return _this5.onPeer(p, screenStream);
+                _this2.joinedRoom(screenStream, true);
+                that.$emit('share-started', screenStream.id);
+                that.signalClient.peers().forEach(function (p) {
+                  return that.onPeer(p, screenStream);
                 });
-                _this5.$emit('share-started', screenStream.id);
-                _context4.next = 15;
+                _context4.next = 16;
                 break;
-              case 12:
-                _context4.prev = 12;
-                _context4.t0 = _context4["catch"](3);
-                _this5.log('Media error', _context4.t0);
-              case 15:
+              case 13:
+                _context4.prev = 13;
+                _context4.t0 = _context4["catch"](4);
+                that.log('Media error: ' + JSON.stringify(_context4.t0));
+              case 16:
               case "end":
                 return _context4.stop();
             }
           }
-        }, _callee4, null, [[3, 12]]);
+        }, _callee4, null, [[4, 13]]);
       }))();
     },
     log: function log(message, data) {
@@ -8913,9 +8939,9 @@ function render$1(_ctx, _cache, $props, $setup, $data, $options) {
   } else {
     style.appendChild(document.createTextNode(css));
   }
-}var css_248z$1 = "\n.video-list[data-v-6a692c70] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-6a692c70] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-6a692c70] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
+}var css_248z$1 = "\n.video-list[data-v-ec6f93b6] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-ec6f93b6] {\n      padding: 0;\n}\n.video-item[data-v-ec6f93b6] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
 styleInject(css_248z$1);script$1.render = render$1;
-script$1.__scopeId = "data-v-6a692c70";var script = /*#__PURE__*/vue.defineComponent({
+script$1.__scopeId = "data-v-ec6f93b6";var script = /*#__PURE__*/vue.defineComponent({
   name: 'VueWebrtcSample',
   // vue component name
   data: function data() {
