@@ -8374,6 +8374,8 @@ var script$1 = /*#__PURE__*/defineComponent({
   },
   methods: {
     async join() {
+      if (this.joined) return; // Prevent joining multiple times
+
       this.socket = lookup(this.socketURL, this.ioOptions);
       this.signalClient = new SimpleSignalClient(this.socket);
       const videoConstraints = {
@@ -8422,7 +8424,9 @@ var script$1 = /*#__PURE__*/defineComponent({
         this.onPeer(peer);
       });
       this.signalClient.discover(this.roomId);
+      this.joined = true; // Set joined to true after setting up everything
     },
+
     async connectToPeer(peerID) {
       if (peerID === this.socket.id) return;
       try {
@@ -8572,11 +8576,11 @@ function styleInject(css, ref) {
   }
 }
 
-var css_248z$1 = "\n.video-list[data-v-6a692c70] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-6a692c70] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-6a692c70] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
+var css_248z$1 = "\n.video-list[data-v-ebd97a0e] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-ebd97a0e] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-ebd97a0e] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
 styleInject(css_248z$1);
 
 script$1.render = render$1;
-script$1.__scopeId = "data-v-6a692c70";
+script$1.__scopeId = "data-v-ebd97a0e";
 
 var script = /*#__PURE__*/defineComponent({
   name: 'VueWebrtcSample',
