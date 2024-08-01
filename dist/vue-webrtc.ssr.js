@@ -8939,9 +8939,9 @@ function render$1(_ctx, _cache, $props, $setup, $data, $options) {
   } else {
     style.appendChild(document.createTextNode(css));
   }
-}var css_248z$1 = "\n.video-list[data-v-6daa3ea5] {\n      background: whitesmoke;\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust min size as needed */\n      gap: 16px; /* Adjust spacing between items as needed */\n      justify-items: center; /* Center items horizontally within their grid cells */\n      padding: 20px; /* Adjust padding as needed */\n}\n.video-list div[data-v-6daa3ea5] {\n      padding: 0;\n}\n.video-item[data-v-6daa3ea5] {\n      background: #c5c4c4;\n      width: 100%; /* Make the video item fill its grid cell */\n      aspect-ratio: 16 / 9; /* Maintain a consistent aspect ratio */\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      text-align: center;\n      border: 1px solid #aaa; /* Optional border for clarity */\n}\n";
+}var css_248z$1 = "\n.video-list[data-v-90d6cef0] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-90d6cef0] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-90d6cef0] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
 styleInject(css_248z$1);script$1.render = render$1;
-script$1.__scopeId = "data-v-6daa3ea5";var script = /*#__PURE__*/vue.defineComponent({
+script$1.__scopeId = "data-v-90d6cef0";var script = /*#__PURE__*/vue.defineComponent({
   name: 'VueWebrtcSample',
   // vue component name
   data: function data() {
