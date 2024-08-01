@@ -83,8 +83,6 @@ export default /*#__PURE__*/defineComponent({
   },
   methods: {
     async join() {
-      if (this.joined) return; // Prevent joining multiple times
-
       this.socket = io(this.socketURL, this.ioOptions);
       this.signalClient = new SimpleSignalClient(this.socket);
 
@@ -134,7 +132,6 @@ export default /*#__PURE__*/defineComponent({
       });
 
       this.signalClient.discover(this.roomId);
-      this.joined = true; // Set joined to true after setting up everything
     },
     async connectToPeer(peerID) {
       if (peerID === this.socket.id) return;

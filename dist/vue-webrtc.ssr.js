@@ -8624,14 +8624,6 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                if (!_this.joined) {
-                  _context2.next = 2;
-                  break;
-                }
-                return _context2.abrupt("return");
-              case 2:
-                // Prevent joining multiple times
-
                 _this.socket = lookup(_this.socketURL, _this.ioOptions);
                 _this.signalClient = new SimpleSignalClient(_this.socket);
                 videoConstraints = {
@@ -8649,13 +8641,13 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                   video: false,
                   audio: _this.enableAudio
                 };
-                _context2.next = 9;
+                _context2.next = 7;
                 return navigator.mediaDevices.getUserMedia(videoConstraints);
-              case 9:
+              case 7:
                 _this.localVideoStream = _context2.sent;
-                _context2.next = 12;
+                _context2.next = 10;
                 return navigator.mediaDevices.getUserMedia(audioConstraints);
-              case 12:
+              case 10:
                 _this.localAudioStream = _context2.sent;
                 // Initialize the audio context and manipulate the audio stream
                 _this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -8709,8 +8701,7 @@ var script$1 = /*#__PURE__*/vue.defineComponent({
                   };
                 }());
                 _this.signalClient.discover(_this.roomId);
-                _this.joined = true; // Set joined to true after setting up everything
-              case 21:
+              case 18:
               case "end":
                 return _context2.stop();
             }
@@ -8922,9 +8913,9 @@ function render$1(_ctx, _cache, $props, $setup, $data, $options) {
   } else {
     style.appendChild(document.createTextNode(css));
   }
-}var css_248z$1 = "\n.video-list[data-v-ebd97a0e] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-ebd97a0e] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-ebd97a0e] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
+}var css_248z$1 = "\n.video-list[data-v-6a692c70] {\n  background: whitesmoke;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 16px;\n  justify-items: center;\n  padding: 20px;\n}\n.video-item[data-v-6a692c70] {\n  background: #c5c4c4;\n  width: 100%;\n  aspect-ratio: 16 / 9;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  text-align: center;\n  border: 1px solid #aaa;\n}\nvideo[data-v-6a692c70] {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n";
 styleInject(css_248z$1);script$1.render = render$1;
-script$1.__scopeId = "data-v-ebd97a0e";var script = /*#__PURE__*/vue.defineComponent({
+script$1.__scopeId = "data-v-6a692c70";var script = /*#__PURE__*/vue.defineComponent({
   name: 'VueWebrtcSample',
   // vue component name
   data: function data() {
